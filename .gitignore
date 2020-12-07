@@ -1,2 +1,7 @@
 node_modules
 dist
+
+## env config
+.env.dev
+.env.prod
+.env.test
