@@ -8,11 +8,15 @@ import jwt from 'jsonwebtoken';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from 'src/jwt/jwt.service';
 import { EditProfileInput } from './dtos/edit-profile.dto';
+import { Verification } from './entities/verification.entity';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User) private readonly users: Repository<User>,
+    @InjectRepository(Verification)
+    private readonly verifications: Repository<Verification>,
+
     // dependency Injection (ConfigService)
     private readonly config: ConfigService,
     private readonly jwtService: JwtService,
@@ -25,14 +29,21 @@ export class UsersService {
   }: CreateAccountInput): Promise<TResponse> {
     // check new user
     try {
-      const exists = await this.users.find({ email });
-      if (exists.length) {
-        return { ok: true, error: 'There is a user with that email already' };
+      const exists = await this.users.findOne(
+        { email },
+        { select: ['id', 'password'] },
+      );
+      if (exists) {
+        return { ok: false, error: 'There is a user with that email already' };
       }
-      await this.users.save(this.users.create({ email, password, role }));
+      const user = await this.users.save(
+        this.users.create({ email, password, role }),
+      );
+      await this.verifications.save(this.verifications.create({ user }));
       return { ok: true };
     } catch (error) {
-      return { ok: true, error: "Couldn't create account" };
+      console.log(error);
+      return { ok: false, error: "Couldn't create account" };
     }
   }
 
@@ -68,8 +79,38 @@ export class UsersService {
 
   async editProfile(id: number, { email, password }: EditProfileInput) {
     let user = await this.users.findOne({ id });
-    if (email) user.email = email;
+    if (email) {
+      await this.verifications.save(this.verifications.create(user));
+      user.email = email;
+      user.verified = false;
+    }
     if (password) user.password = password;
     return await this.users.save(user);
+  }
+
+  async verifyEmail(code: string) {
+    try {
+      const verification = await this.verifications.findOne(
+        { code },
+        { relations: ['user'] },
+      );
+      if (verification) {
+        verification.user.verified = true;
+        this.users.save(verification.user);
+        return {
+          ok: true,
+        };
+      } else {
+        return {
+          ok: false,
+          error: 'Wrong Code',
+        };
+      }
+    } catch (error) {
+      return {
+        ok: false,
+        error,
+      };
+    }
   }
 }
