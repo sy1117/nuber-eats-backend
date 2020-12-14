@@ -7,7 +7,7 @@ import { LoginInput, LoginOutput } from './dtos/login.dto';
 import jwt from 'jsonwebtoken';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from 'src/jwt/jwt.service';
-import { EditProfileInput } from './dtos/edit-profile.dto';
+import { EditProfileInput, EditProfileOutput } from './dtos/edit-profile.dto';
 import { Verification } from './entities/verification.entity';
 
 @Injectable()
@@ -42,7 +42,6 @@ export class UsersService {
       await this.verifications.save(this.verifications.create({ user }));
       return { ok: true };
     } catch (error) {
-      console.log(error);
       return { ok: false, error: "Couldn't create account" };
     }
   }
@@ -74,18 +73,39 @@ export class UsersService {
   }
 
   async findById(id: number): Promise<User> {
-    return await this.users.findOne({ id });
+    try {
+      const user = await this.users.findOne({ id });
+      if (!user) {
+        throw new Error('User not Found');
+      }
+      return user;
+    } catch (error) {}
   }
 
-  async editProfile(id: number, { email, password }: EditProfileInput) {
-    let user = await this.users.findOne({ id });
-    if (email) {
-      await this.verifications.save(this.verifications.create(user));
-      user.email = email;
-      user.verified = false;
+  async editProfile(
+    id: number,
+    { email, password }: EditProfileInput,
+  ): Promise<EditProfileOutput> {
+    try {
+      let user = await this.users.findOne({ id });
+      if (email) {
+        await this.verifications.save(this.verifications.create(user));
+        user.email = email;
+        user.verified = false;
+      }
+      if (password) user.password = password;
+
+      await this.users.save(user);
+      return {
+        ok: true,
+        user: user,
+      };
+    } catch (error) {
+      return {
+        ok: false,
+        error,
+      };
     }
-    if (password) user.password = password;
-    return await this.users.save(user);
   }
 
   async verifyEmail(code: string) {
