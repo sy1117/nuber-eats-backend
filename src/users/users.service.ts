@@ -3,13 +3,18 @@ import { Injectable } from '@nestjs/common';
 import { User } from './entities/users.entity';
 import { Repository } from 'typeorm';
 import { CreateAccountInput } from './dtos/create-account.dto';
-import { LoginInput } from './dtos/login.dto';
-import bcrypt from 'bcrypt';
+import { LoginInput, LoginOutput } from './dtos/login.dto';
+import jwt from 'jsonwebtoken';
+import { ConfigService } from '@nestjs/config';
+import { JwtService } from 'src/jwt/jwt.service';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User) private readonly users: Repository<User>,
+    // dependency Injection (ConfigService)
+    private readonly config: ConfigService,
+    private readonly jwtService: JwtService,
   ) {}
 
   async createAccount({
@@ -30,7 +35,7 @@ export class UsersService {
     }
   }
 
-  async login({ email, password }: LoginInput) {
+  async login({ email, password }: LoginInput): Promise<LoginOutput> {
     try {
       const user = await this.users.findOne({ email });
       if (!user) {
@@ -46,12 +51,17 @@ export class UsersService {
         };
       }
 
-      return { ok: true, token: 'token smaple' };
+      const token = this.jwtService.sign({ id: user.id });
+      return { ok: true, token };
     } catch (error) {
       return {
         ok: false,
         error,
       };
     }
+  }
+
+  async findById(id: number): Promise<User> {
+    return await this.users.findOne({ id });
   }
 }

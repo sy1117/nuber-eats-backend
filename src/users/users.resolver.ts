@@ -6,6 +6,9 @@ import {
   CreateAccountOutput,
 } from './dtos/create-account.dto';
 import { LoginOutput, LoginInput } from './dtos/login.dto';
+import { UseGuards } from '@nestjs/common';
+import { AuthGuard } from 'src/auth/auth.guard';
+import { AuthUser } from 'src/auth/auth-user.decorator';
 
 @Resolver((of) => User)
 export class UsersResolver {
@@ -37,7 +40,7 @@ export class UsersResolver {
   }
 
   @Mutation((returns) => LoginOutput)
-  async login(input: LoginInput): Promise<LoginOutput> {
+  async login(@Args('input') input: LoginInput): Promise<LoginOutput> {
     try {
       const { ok, error, token } = await this.usersService.login(input);
       return { ok, error, token };
@@ -47,5 +50,11 @@ export class UsersResolver {
         error,
       };
     }
+  }
+
+  @Query((returns) => User)
+  @UseGuards(AuthGuard)
+  me(@AuthUser() authUser: User) {
+    return authUser;
   }
 }
