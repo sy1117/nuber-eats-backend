@@ -1,5 +1,4 @@
 import { Entity, Column, BeforeInsert, BeforeUpdate } from 'typeorm';
-import { CoreEntity } from 'src/common/entities/core.entity';
 import {
   ObjectType,
   InputType,
@@ -9,6 +8,7 @@ import {
 import * as bcrypt from 'bcrypt';
 import { InternalServerErrorException } from '@nestjs/common';
 import { IsEmail, IsEnum } from 'class-validator';
+import { CoreEntity } from '../../common/entities/core.entity';
 
 enum UserRole {
   Owner,
