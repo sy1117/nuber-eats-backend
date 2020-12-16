@@ -7,8 +7,6 @@ import { MailService } from 'src/mail/mail.service';
 import { JwtService } from 'src/jwt/jwt.service';
 import { Repository } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
-import { async } from 'rxjs';
-import { sign } from 'crypto';
 
 const mockRepository = () => ({
   findOne: jest.fn(),
