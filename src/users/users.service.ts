@@ -98,12 +98,12 @@ export class UsersService {
     { email, password }: EditProfileInput,
   ): Promise<EditProfileOutput> {
     try {
-      let user = await this.users.findOne({ id });
+      let user = await this.users.findOne(id);
       if (email) {
         user.email = email;
         user.verified = false;
         const verification = await this.verifications.save(
-          this.verifications.create(user),
+          this.verifications.create({ user }),
         );
         this.mailService.sendVerificationEmail(email, verification.code);
       }
