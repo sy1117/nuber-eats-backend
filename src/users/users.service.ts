@@ -112,12 +112,11 @@ export class UsersService {
       await this.users.save(user);
       return {
         ok: true,
-        user: user,
       };
     } catch (error) {
       return {
         ok: false,
-        error,
+        error: 'Could not update profile',
       };
     }
   }
@@ -138,13 +137,13 @@ export class UsersService {
       } else {
         return {
           ok: false,
-          error: 'Wrong Code',
+          error: 'Verification not found',
         };
       }
     } catch (error) {
       return {
         ok: false,
-        error,
+        error: 'Verification not found',
       };
     }
   }
