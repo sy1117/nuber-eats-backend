@@ -189,7 +189,7 @@ describe('UserService', () => {
 
       expect(usersRepository.findOne).toHaveBeenCalledTimes(1);
       expect(jwtService.sign).toHaveBeenCalledTimes(1);
-      expect(jwtService.sign).toHaveBeenCalledWith({ id: expect.any(Number) });
+      expect(jwtService.sign).toHaveBeenCalledWith(mockedUser.id);
 
       expect(result).toEqual({
         ok: true,
