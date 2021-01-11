@@ -10,6 +10,6 @@ export class UserProfileInput {
 
 @ObjectType()
 export class UserProfileOutput extends MutationOutput {
-  @Field((returns) => User)
-  user: User;
+  @Field((returns) => User, { nullable: true })
+  user?: User;
 }
