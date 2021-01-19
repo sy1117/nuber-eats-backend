@@ -9,6 +9,7 @@ import { JwtService } from 'src/jwt/jwt.service';
 import { EditProfileInput, EditProfileOutput } from './dtos/edit-profile.dto';
 import { Verification } from './entities/verification.entity';
 import { MailService } from 'src/mail/mail.service';
+import { UserProfileOutput } from './dtos/user-profile.dto';
 
 @Injectable()
 export class UsersService {
@@ -66,9 +67,10 @@ export class UsersService {
         };
       }
 
-      const token = this.jwtService.sign({ id: user.id });
+      const token = this.jwtService.sign(user.id);
       return { ok: true, token };
     } catch (error) {
+      console.error(error);
       return {
         ok: false,
         error: "Can't log user in",
@@ -76,9 +78,7 @@ export class UsersService {
     }
   }
 
-  async findById(
-    id: number,
-  ): Promise<{ ok: boolean; user?: User; error?: string }> {
+  async findById(id: number): Promise<UserProfileOutput> {
     try {
       const user = await this.users.findOneOrFail({ id });
       return {
@@ -102,6 +102,7 @@ export class UsersService {
       if (email) {
         user.email = email;
         user.verified = false;
+        this.verifications.delete({ user: { id: user.id } });
         const verification = await this.verifications.save(
           this.verifications.create({ user }),
         );
@@ -112,12 +113,11 @@ export class UsersService {
       await this.users.save(user);
       return {
         ok: true,
-        user: user,
       };
     } catch (error) {
       return {
         ok: false,
-        error,
+        error: 'Could not update profile',
       };
     }
   }
@@ -138,13 +138,13 @@ export class UsersService {
       } else {
         return {
           ok: false,
-          error: 'Wrong Code',
+          error: 'Verification not found',
         };
       }
     } catch (error) {
       return {
         ok: false,
-        error,
+        error: 'Verification not found',
       };
     }
   }

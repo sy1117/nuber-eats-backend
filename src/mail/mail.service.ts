@@ -13,11 +13,11 @@ export class MailService {
     this.sendEmail('test', 'number_', []);
   }
 
-  private async sendEmail(
+  async sendEmail(
     subject: string,
     template: string,
     emailVar?: EmailVar[],
-  ) {
+  ): Promise<boolean> {
     const form = new FormData();
     form.append('from', `Nuber Eats <mailgun@${this.options.fromEmail}>`);
     form.append('to', 'soyou6358@gmail.com');
@@ -32,7 +32,7 @@ export class MailService {
     });
 
     try {
-      const response = await got(
+      await got.post(
         `https://api.mailgun.net/v3/${this.options.domain}/messages`,
         {
           headers: {
@@ -43,8 +43,9 @@ export class MailService {
           body: form,
         },
       );
+      return true;
     } catch (error) {
-      console.error(error);
+      return false;
     }
   }
 

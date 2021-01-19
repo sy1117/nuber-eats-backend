@@ -1,4 +1,4 @@
-import { Entity, Column, BeforeInsert, BeforeUpdate } from 'typeorm';
+import { Entity, Column, BeforeInsert, BeforeUpdate, OneToMany } from 'typeorm';
 import {
   ObjectType,
   InputType,
@@ -7,8 +7,9 @@ import {
 } from '@nestjs/graphql';
 import * as bcrypt from 'bcrypt';
 import { InternalServerErrorException } from '@nestjs/common';
-import { IsEmail, IsEnum } from 'class-validator';
+import { IsEmail, IsEnum, IsString, IsBoolean } from 'class-validator';
 import { CoreEntity } from '../../common/entities/core.entity';
+import { Restaurant } from 'src/restaurants/entities/restaurant.entity';
 
 enum UserRole {
   Owner,
@@ -17,7 +18,7 @@ enum UserRole {
 }
 
 registerEnumType(UserRole, { name: 'UserRole' });
-@InputType({ isAbstract: true })
+@InputType('UserInputType', { isAbstract: true })
 @ObjectType()
 @Entity()
 export class User extends CoreEntity {
@@ -26,8 +27,10 @@ export class User extends CoreEntity {
   @IsEmail()
   email: string;
 
-  @Column({ select: false })
+  // @Column({ select: false })
+  @Column()
   @Field((type) => String)
+  @IsString()
   password: string;
 
   @Column({
@@ -40,7 +43,12 @@ export class User extends CoreEntity {
 
   @Field((type) => Boolean, { defaultValue: false, nullable: true })
   @Column({ default: false })
+  @IsBoolean()
   verified: boolean;
+
+  @Field((type) => [Restaurant])
+  @OneToMany((type) => Restaurant, (restaurant) => restaurant.owner)
+  restaurants: Restaurant[];
 
   @BeforeInsert()
   @BeforeUpdate()
@@ -55,11 +63,12 @@ export class User extends CoreEntity {
     }
   }
 
-  async checkPassword(password): Promise<boolean> {
+  async checkPassword(password: string): Promise<boolean> {
     try {
-      return await bcrypt.compare(password, this.password);
+      console.log(password, this.password);
+      const ok = await bcrypt.compare(password, this.password);
+      return ok;
     } catch (error) {
-      console.error(error);
       throw new InternalServerErrorException(error);
     }
   }
