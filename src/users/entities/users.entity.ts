@@ -9,12 +9,13 @@ import * as bcrypt from 'bcrypt';
 import { InternalServerErrorException } from '@nestjs/common';
 import { IsEmail, IsEnum, IsString, IsBoolean } from 'class-validator';
 import { CoreEntity } from '../../common/entities/core.entity';
-import { Restaurant } from 'src/restaurants/entities/restaurant.entity';
+import { Restaurant } from '../../restaurants/entities/restaurants.entity';
 
-enum UserRole {
-  Owner,
-  Client,
-  Delivery,
+
+export enum UserRole {
+  Owner = "Owner",
+  Client = "Client",
+  Delivery = "Delivery",
 }
 
 registerEnumType(UserRole, { name: 'UserRole' });
