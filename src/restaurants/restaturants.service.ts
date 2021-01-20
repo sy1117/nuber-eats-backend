@@ -6,16 +6,16 @@ import {
   CreateRestaurantInput,
   CreateRestaurantOutput,
 } from './dtos/create-restaurants.dto';
-import { UpdateRestaurantDto } from './dtos/update-restaurant.dto';
 import { User } from 'src/users/entities/users.entity';
 import { Category } from './entities/category.entity';
+import { EditRestaurantOutput, EditRestaurantInput } from './dtos/edit-restaurants.dto';
+import { CategoryRepository } from './repositories/category.repository';
 @Injectable()
 export class RestaurantsService {
   constructor(
     @InjectRepository(Restaurant)
     private readonly restaurants: Repository<Restaurant>,
-    @InjectRepository(Category)
-    private readonly categories: Repository<Category>,
+    private readonly categories: CategoryRepository,
   ) { }
 
   getAll(): Promise<Restaurant[]> {
@@ -27,15 +27,10 @@ export class RestaurantsService {
     createRestaurantInput: CreateRestaurantInput,
   ): Promise<CreateRestaurantOutput> {
     try {
+      console.log(createRestaurantInput)
       const newRestaurant = await this.restaurants.save(createRestaurantInput);
       newRestaurant.owner = owner;
-      const categoryName = createRestaurantInput.categoryName.trim().toLowerCase();
-      const categorySlug = categoryName.replace(/ /g, '-');
-      let category = await this.categories.findOne({ slug: categorySlug });
-      if (!category) {
-        category = await this.categories.save(this.categories.create({ slug: categorySlug }))
-      }
-      newRestaurant.category = category;
+      newRestaurant.category = await this.categories.getOrCreateCategory(createRestaurantInput.name);
       return {
         ok: true,
       };
@@ -47,7 +42,37 @@ export class RestaurantsService {
     }
   }
 
-  updateRestaurant({ id, ...data }: UpdateRestaurantDto) {
-    return this.restaurants.update({ id }, { ...data });
+  async editRestaurant(owner: User, editRestaurantInput: EditRestaurantInput): Promise<EditRestaurantOutput> {
+    try {
+      const { restaurantId: id } = editRestaurantInput;
+      const restaurant = await this.restaurants.findOneOrFail({ id }, { loadRelationIds: true });
+      if (!restaurant) {
+        return {
+          ok: false,
+          error: 'Restaurant not found'
+        }
+      }
+      if (owner.id !== restaurant.ownerId) {
+        return {
+          ok: false,
+          error: "You can't edit a restaurant that you don't own"
+        }
+      }
+      let category: Category = null;
+      if (editRestaurantInput.categoryName) {
+        category = await this.categories.getOrCreateCategory(editRestaurantInput.categoryName)
+      }
+      if (restaurant) {
+        await this.restaurants.save({ id, ...editRestaurantInput, ...(category && { category }) });
+      }
+      return {
+        ok: true,
+      }
+    } catch (error) {
+      return {
+        ok: false,
+        error: "Restaurant cannot update"
+      }
+    }
   }
 }
