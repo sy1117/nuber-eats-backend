@@ -25,13 +25,15 @@ export class Restaurant extends CoreEntity {
   @IsString()
   coverImg: string;
 
-
   @Field((type) => Category, { nullable: true })
   @ManyToOne((type) => Category, (category) => category.restaurants, {
     nullable: true,
     onDelete: 'SET NULL',
   })
   category: Category;
+
+  @RelationId((restaurant: Restaurant) => restaurant.category)
+  categoryId: number;
 
   @Field((type) => User)
   @ManyToOne((type) => User, (owner) => owner.restaurants, {

@@ -1,15 +1,25 @@
 import { Resolver, Query, Args, Mutation } from '@nestjs/graphql';
 import { Restaurant } from './entities/restaurants.entity';
-import { CreateRestaurantInput, CreateRestaurantOutput } from './dtos/create-restaurants.dto';
+import {
+  CreateRestaurantInput,
+  CreateRestaurantOutput,
+} from './dtos/create-restaurants.dto';
 import { RestaurantsService } from './restaturants.service';
 import { AuthUser } from 'src/auth/auth-user.decorator';
 import { User, UserRole } from 'src/users/entities/users.entity';
 import { Role } from 'src/auth/role.decorator';
-import { EditRestaurantOutput, EditRestaurantInput } from './dtos/edit-restaurants.dto';
+import {
+  EditRestaurantOutput,
+  EditRestaurantInput,
+} from './dtos/edit-restaurants.dto';
+import {
+  DeleteRestaurantInput,
+  DeleteRestaurantOutput,
+} from './dtos/delete-restaurant';
 
 @Resolver((of) => Restaurant)
 export class RestaurantsResolver {
-  constructor(private readonly restaurantService: RestaurantsService) { }
+  constructor(private readonly restaurantService: RestaurantsService) {}
 
   @Query((returns) => [Restaurant])
   restaurants(): Promise<Restaurant[]> {
@@ -28,13 +38,27 @@ export class RestaurantsResolver {
     );
   }
 
-
-  @Mutation(returns => EditRestaurantOutput)
-  @Role(["Owner"])
+  @Mutation((returns) => EditRestaurantOutput)
+  @Role(['Owner'])
   async editRestaurant(
     @AuthUser() authUser: User,
-    @Args('input') editRestaurantInput: EditRestaurantInput
+    @Args('input') editRestaurantInput: EditRestaurantInput,
   ): Promise<EditRestaurantOutput> {
-    return await this.restaurantService.editRestaurant(authUser, editRestaurantInput);
+    return await this.restaurantService.editRestaurant(
+      authUser,
+      editRestaurantInput,
+    );
+  }
+
+  @Mutation((returns) => EditRestaurantOutput)
+  @Role(['Owner'])
+  async deleteRestaurant(
+    @AuthUser() authUser: User,
+    @Args('input') deleteRestaurantInput: DeleteRestaurantInput,
+  ): Promise<DeleteRestaurantOutput> {
+    return await this.restaurantService.deleteRestaurant(
+      authUser,
+      deleteRestaurantInput,
+    );
   }
 }
