@@ -8,11 +8,11 @@ import { Restaurant } from './restaurants.entity';
 @ObjectType()
 @Entity()
 export class Category extends CoreEntity {
-  // @Field((type) => String)
-  // @Column({ unique: true })
-  // @IsString()
-  // @Length(5)
-  // name: string;
+  @Field((type) => String)
+  @Column({ unique: true })
+  @IsString()
+  @Length(5)
+  name: string;
 
   // @Field((type) => String, { nullable: true })
   // @Column({ nullable: true })

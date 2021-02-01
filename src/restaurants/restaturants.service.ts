@@ -16,7 +16,8 @@ import { CategoryRepository } from './repositories/category.repository';
 import {
   DeleteRestaurantInput,
   DeleteRestaurantOutput,
-} from './dtos/delete-restaurant';
+} from './dtos/delete-restaurant.dto';
+import { AllCategoriesOutput } from './dtos/all-categories.dto';
 @Injectable()
 export class RestaurantsService {
   constructor(
@@ -34,12 +35,13 @@ export class RestaurantsService {
     createRestaurantInput: CreateRestaurantInput,
   ): Promise<CreateRestaurantOutput> {
     try {
-      console.log(createRestaurantInput);
       const newRestaurant = await this.restaurants.save(createRestaurantInput);
       newRestaurant.owner = owner;
-      newRestaurant.category = await this.categories.getOrCreateCategory(
+      const category = await this.categories.getOrCreateCategory(
         createRestaurantInput.categoryName,
       );
+      newRestaurant.category = category;
+      await this.restaurants.save(newRestaurant);
 
       return {
         ok: true,
@@ -111,7 +113,6 @@ export class RestaurantsService {
           error: 'Restaurant not found',
         };
       }
-      console.log(owner, restaurant.ownerId);
       if (owner.id !== restaurant.ownerId) {
         return {
           ok: false,
@@ -129,5 +130,24 @@ export class RestaurantsService {
         error: 'Could not delete restaurant',
       };
     }
+  }
+
+  async allCategories(): Promise<AllCategoriesOutput> {
+    try {
+      const categories = await this.categories.find();
+      return {
+        ok: true,
+        categories,
+      };
+    } catch (error) {
+      return {
+        ok: false,
+        error: 'Could not load categories',
+      };
+    }
+  }
+
+  countRestaurants(category: Category) {
+    return this.restaurants.count({ category });
   }
 }

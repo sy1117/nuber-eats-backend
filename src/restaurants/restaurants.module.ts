@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { RestaurantsResolver } from './restaurants.resolver';
+import { RestaurantsResolver, CategoryResolver } from './restaurants.resolver';
 import { Query } from '@nestjs/graphql';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Restaurant } from './entities/restaurants.entity';
@@ -9,8 +9,8 @@ import { CategoryRepository } from './repositories/category.repository';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Restaurant, CategoryRepository])],
-  providers: [RestaurantsResolver, RestaurantsService],
-  exports: [RestaurantsService]
+  providers: [RestaurantsResolver, RestaurantsService, CategoryResolver],
+  exports: [RestaurantsService],
 })
 export class RestaurantsModule {
   @Query((returns) => Boolean)
